@@ -2,12 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getPlan, getSaved } from "../lib/workoutStorage";
 
 export default function Navbar() {
-  const router = useRouter();
-
   const [planCount, setPlanCount] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
 
@@ -50,21 +47,21 @@ export default function Navbar() {
         {/* CENTER MENU */}
         <div className="hidden items-center gap-2 md:flex">
 
-          <button
-            type="button"
-            onClick={() => router.push("/")}
+          {/* WORKOUT */}
+          <Link
+            href="/?from=page"
             className="cursor-pointer rounded-full px-5 py-2 text-sm font-black uppercase text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
           >
             Workout
-          </button>
+          </Link>
 
-          <button
-            type="button"
-            onClick={() => router.push("/my-plan?tab=plan")}
+          {/* MY PLAN */}
+          <Link
+            href="/my-plan?tab=myplan"
             className="cursor-pointer rounded-full px-5 py-2 text-sm font-black uppercase text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
           >
             My Plan
-          </button>
+          </Link>
 
         </div>
 
@@ -72,22 +69,20 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
 
           {/* PLAN */}
-          <button
-            type="button"
-            onClick={() => router.push("/my-plan?tab=plan")}
+          <Link
+            href="/my-plan?tab=plan"
             className="cursor-pointer rounded-full bg-[#ccff00] px-4 py-2 text-xs font-black uppercase text-black transition hover:scale-105"
           >
             Plan {planCount}
-          </button>
+          </Link>
 
           {/* SAVED */}
-          <button
-            type="button"
-            onClick={() => router.push("/my-plan?tab=saved")}
+          <Link
+            href="/my-plan?tab=saved"
             className="cursor-pointer rounded-full border border-zinc-700 px-4 py-2 text-xs font-black uppercase text-white transition hover:border-[#ccff00] hover:text-[#ccff00]"
           >
             Saved {savedCount}
-          </button>
+          </Link>
 
         </div>
       </div>
@@ -95,21 +90,21 @@ export default function Navbar() {
       {/* MOBILE MENU */}
       <div className="flex border-t border-zinc-900 md:hidden">
 
-        <button
-          type="button"
-          onClick={() => router.push("/")}
+        {/* MOBILE WORKOUT */}
+        <Link
+          href="/?from=page"
           className="flex-1 cursor-pointer py-3 text-center text-xs font-black uppercase text-zinc-400 hover:bg-zinc-900 hover:text-[#ccff00]"
         >
           Workout
-        </button>
+        </Link>
 
-        <button
-          type="button"
-          onClick={() => router.push("/my-plan?tab=plan")}
+        {/* MOBILE MY PLAN */}
+        <Link
+          href="/my-plan?tab=plan"
           className="flex-1 cursor-pointer border-l border-zinc-900 py-3 text-center text-xs font-black uppercase text-zinc-400 hover:bg-zinc-900 hover:text-[#ccff00]"
         >
           My Plan
-        </button>
+        </Link>
 
       </div>
     </nav>

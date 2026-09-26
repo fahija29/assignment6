@@ -359,7 +359,7 @@ export default function WorkoutDetails({
             <img
               src={currentWorkout.image}
               alt={currentWorkout.name}
-              className="h-full min-h-[500px] w-full object-cover"
+             className="h-[350px] w-full object-cover sm:h-[450px] lg:h-full lg:min-h-[500px]"
             />
           </div>
 

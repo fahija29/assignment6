@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export type Workout = {
   id: number;
@@ -289,17 +290,39 @@ const workouts: Workout[] = [
   },
 ];
 
-export default function Home() {
-  const [loading, setLoading] = useState(true);
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [sortBy, setSortBy] = useState<SortOption>("duration");
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
+  const fromPage = searchParams.get("from") === "page";
 
-    return () => clearTimeout(timer);
-  }, []);
+  useEffect(() => {
+    if (!fromPage) return;
+
+    const timer = window.setTimeout(() => {
+      router.replace("/");
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [fromPage, router]);
+
+  if (fromPage) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-[#ccff00]" />
+
+          <p className="font-bold tracking-[0.2em] text-[#ccff00]">
+            LOADING WORKOUT...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const sortedWorkouts = [...workouts].sort((a, b) => {
     if (sortBy === "duration") {
@@ -313,20 +336,6 @@ export default function Home() {
     return b.rating - a.rating;
   });
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        <div className="text-center">
-          <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-4 border-zinc-700 border-t-[#ccff00]" />
-
-          <p className="font-black tracking-[0.25em] text-[#ccff00]">
-            LOADING WORKOUTS...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-black text-white">
       {/* HERO */}
@@ -337,13 +346,13 @@ export default function Home() {
               WORKOUT LIBRARY
             </p>
 
-            <h1 className="text-5xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="text-3xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">
               TRAIN WITH INTENT.
               <br />
               <span className="text-[#ccff00]">LOG EVERY SET.</span>
             </h1>
 
-            <p className="mt-7 max-w-xl text-lg leading-8 text-zinc-400">
+            <p className="mt-7 max-w-xl text-lg leading-8 text-zinc-300">
               FitLog is a dark, no-nonsense gym companion: pick a lift, lock it
               into today&apos;s plan, and watch the week&apos;s work add up.
             </p>
@@ -359,7 +368,7 @@ export default function Home() {
 
           {/* HERO IMAGE */}
           <div className="flex justify-center md:justify-end">
-            <div className="relative flex h-[560px] w-full max-w-[520px] items-center justify-center overflow-hidden rounded-[32px] bg-zinc-950">
+            <div className="relative flex h-[460px] w-full max-w-[520px] items-center justify-center overflow-hidden rounded-[32px] bg-zinc-950">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/banner.png"
@@ -493,5 +502,13 @@ export default function Home() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <HomeContent />
+    </Suspense>
   );
 }
