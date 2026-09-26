@@ -2,7 +2,7 @@
 
 import Footer from "../../components/Footer";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getPlan,
@@ -27,7 +27,7 @@ type Workout = {
   instructions: string[];
 };
 
-export default function MyPlan() {
+function MyPlanContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -420,5 +420,13 @@ export default function MyPlan() {
       {/* FOOTER */}
       <Footer />
     </div>
+  );
+}
+
+export default function MyPlan() {
+  return (
+    <Suspense fallback={null}>
+      <MyPlanContent />
+    </Suspense>
   );
 }
