@@ -27,6 +27,8 @@ type Workout = {
   instructions: string[];
 };
 
+type SortOption = "duration" | "calories" | "rating";
+
 function MyPlanContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -34,6 +36,7 @@ function MyPlanContent() {
   const [plan, setPlan] = useState<Workout[]>([]);
   const [saved, setSaved] = useState<Workout[]>([]);
   const [message, setMessage] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("duration");
 
   const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -143,6 +146,20 @@ function MyPlanContent() {
   const currentWorkouts =
     activeTab === "plan" ? plan : saved;
 
+  // Sort current list
+  const sortedWorkouts = [...currentWorkouts].sort((a, b) => {
+  if (sortBy === "duration") {
+    
+    return a.duration - b.duration;
+  }
+
+  if (sortBy === "calories") {
+    
+    return b.caloriesBurned - a.caloriesBurned;
+  }
+  
+  return b.rating - a.rating;
+});
   return (
     <div className="min-h-screen bg-black text-white">
 
@@ -222,37 +239,73 @@ function MyPlanContent() {
       >
         <div className="mx-auto max-w-7xl">
 
-          <div className="flex gap-3 border-b border-zinc-800">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800">
 
-            {/* TODAY'S PLAN */}
-            <button
-              type="button"
-              onClick={() =>
-                router.push("/my-plan?tab=plan")
-              }
-              className={`border-b-2 px-4 py-4 text-sm font-black uppercase transition ${
-                activeTab === "plan"
-                  ? "border-[#ccff00] text-[#ccff00]"
-                  : "border-transparent text-zinc-500 hover:text-white"
-              }`}
-            >
-              Today&apos;s Plan ({plan.length})
-            </button>
+            {/* TABS */}
+            <div className="flex gap-3">
 
-            {/* SAVED */}
-            <button
-              type="button"
-              onClick={() =>
-                router.push("/my-plan?tab=saved")
-              }
-              className={`border-b-2 px-4 py-4 text-sm font-black uppercase transition ${
-                activeTab === "saved"
-                  ? "border-[#ccff00] text-[#ccff00]"
-                  : "border-transparent text-zinc-500 hover:text-white"
-              }`}
-            >
-              Saved ({saved.length})
-            </button>
+              {/* TODAY'S PLAN */}
+              <button
+                type="button"
+                onClick={() =>
+                  router.push("/my-plan?tab=plan")
+                }
+                className={`border-b-2 px-4 py-4 text-sm font-black uppercase transition ${
+                  activeTab === "plan"
+                    ? "border-[#ccff00] text-[#ccff00]"
+                    : "border-transparent text-zinc-500 hover:text-white"
+                }`}
+              >
+                Today&apos;s Plan ({plan.length})
+              </button>
+
+              {/* SAVED */}
+              <button
+                type="button"
+                onClick={() =>
+                  router.push("/my-plan?tab=saved")
+                }
+                className={`border-b-2 px-4 py-4 text-sm font-black uppercase transition ${
+                  activeTab === "saved"
+                    ? "border-[#ccff00] text-[#ccff00]"
+                    : "border-transparent text-zinc-500 hover:text-white"
+                }`}
+              >
+                Saved ({saved.length})
+              </button>
+
+            </div>
+
+            {/* SORT BY */}
+            <div className="flex items-center gap-2 pb-3">
+              <label
+                htmlFor="sortBy"
+                className="text-xs font-black uppercase text-zinc-500"
+              >
+                Sort By
+              </label>
+
+              <select
+                id="sortBy"
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(e.target.value as SortOption)
+                }
+                className="rounded-full border border-zinc-700 bg-[#111318] px-4 py-2 text-xs font-black uppercase text-white outline-none transition focus:border-[#ccff00]"
+              >
+                <option value="duration">
+                  Duration
+                </option>
+
+                <option value="calories">
+                  Calories
+                </option>
+
+                <option value="rating">
+                  Rating
+                </option>
+              </select>
+            </div>
 
           </div>
         </div>
@@ -271,7 +324,7 @@ function MyPlanContent() {
       <section className="px-6 py-10">
         <div className="mx-auto max-w-7xl">
 
-          {currentWorkouts.length === 0 ? (
+          {sortedWorkouts.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-zinc-800 bg-[#111318] px-6 py-20 text-center">
 
               <p className="text-sm font-black tracking-[0.3em] text-[#ccff00]">
@@ -298,7 +351,7 @@ function MyPlanContent() {
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-              {currentWorkouts.map((workout) => (
+              {sortedWorkouts.map((workout) => (
                 <div
                   key={workout.id}
                   className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#111318]"
