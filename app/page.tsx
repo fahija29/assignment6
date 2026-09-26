@@ -1,6 +1,9 @@
-import Navbar from "../components/Navbar";
+"use client";
+
+import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import Link from "next/link";
+
 export type Workout = {
   id: number;
   name: string;
@@ -16,6 +19,8 @@ export type Workout = {
   description: string;
   instructions: string[];
 };
+
+type SortOption = "duration" | "calories" | "rating";
 
 const workouts: Workout[] = [
   {
@@ -285,15 +290,48 @@ const workouts: Workout[] = [
 ];
 
 export default function Home() {
-  return (
-    <main className="min-h-screen bg-black text-white">
-      <Navbar />
+  const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<SortOption>("duration");
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const sortedWorkouts = [...workouts].sort((a, b) => {
+    if (sortBy === "duration") {
+      return a.duration - b.duration;
+    }
+
+    if (sortBy === "calories") {
+      return b.caloriesBurned - a.caloriesBurned;
+    }
+
+    return b.rating - a.rating;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-4 border-zinc-700 border-t-[#ccff00]" />
+
+          <p className="font-black tracking-[0.25em] text-[#ccff00]">
+            LOADING WORKOUTS...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
       {/* HERO */}
       <section className="relative overflow-hidden bg-black">
         <div className="mx-auto grid min-h-[88vh] max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2 lg:px-8">
-
-          {/* LEFT */}
           <div>
             <p className="mb-5 text-sm font-bold tracking-[0.3em] text-[#ccff00]">
               WORKOUT LIBRARY
@@ -302,14 +340,12 @@ export default function Home() {
             <h1 className="text-5xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
               TRAIN WITH INTENT.
               <br />
-              <span className="text-[#ccff00]">
-                LOG EVERY SET.
-              </span>
+              <span className="text-[#ccff00]">LOG EVERY SET.</span>
             </h1>
 
             <p className="mt-7 max-w-xl text-lg leading-8 text-zinc-400">
-              FitLog is a dark, no-nonsense gym companion: pick a lift,
-              lock it into today&apos;s plan, and watch the week&apos;s work add up.
+              FitLog is a dark, no-nonsense gym companion: pick a lift, lock it
+              into today&apos;s plan, and watch the week&apos;s work add up.
             </p>
 
             <a
@@ -324,6 +360,7 @@ export default function Home() {
           {/* HERO IMAGE */}
           <div className="flex justify-center md:justify-end">
             <div className="relative flex h-[560px] w-full max-w-[520px] items-center justify-center overflow-hidden rounded-[32px] bg-zinc-950">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/banner.png"
                 alt="FitLog Workout"
@@ -340,7 +377,6 @@ export default function Home() {
         className="border-t border-zinc-900 px-6 py-20"
       >
         <div className="mx-auto max-w-7xl">
-
           <p className="text-sm font-bold tracking-[0.3em] text-[#ccff00]">
             WORKOUTS
           </p>
@@ -353,31 +389,48 @@ export default function Home() {
             Twelve lifts covering every major muscle group.
           </p>
 
-          {/* 3 COLUMNS × 4 ROWS */}
-          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* SORT BAR */}
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-bold tracking-widest text-zinc-500">
+              12 WORKOUTS
+            </p>
 
-            {workouts.map((workout) => (
+            <select
+              value={sortBy}
+              onChange={(e) =>
+                setSortBy(e.target.value as SortOption)
+              }
+              className="w-full rounded-full border border-zinc-700 bg-[#111318] px-5 py-3 text-sm font-bold text-white outline-none transition focus:border-[#ccff00] sm:w-auto"
+            >
+              <option value="duration">Sort By Duration</option>
+              <option value="calories">Sort By Calories</option>
+              <option value="rating">Sort By Rating</option>
+            </select>
+          </div>
+
+          {/* WORKOUT GRID */}
+          <div className="mt-10 grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
+            {sortedWorkouts.map((workout) => (
               <Link
                 key={workout.id}
                 href={`/workouts/${workout.id}`}
                 className="group block overflow-hidden rounded-3xl border border-zinc-800 bg-[#111318] transition duration-300 hover:-translate-y-2 hover:border-[#ccff00] hover:shadow-[0_15px_40px_rgba(204,255,0,0.12)]"
               >
-
                 {/* IMAGE */}
-                <div className="relative h-60 overflow-hidden bg-zinc-900">
+                <div className="relative flex h-64 items-center justify-center overflow-hidden bg-zinc-950">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={workout.image}
                     alt={workout.name}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    className="h-full w-full object-contain p-2 transition duration-500 group-hover:scale-105"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 </div>
 
                 {/* CARD CONTENT */}
-                <div className="p-5">
-
-                  {/* YELLOW CATEGORY PILLS */}
+                <div className="p-6">
+                  {/* CATEGORY PILLS */}
                   <div className="flex flex-wrap gap-2">
                     {workout.muscleGroups.map((muscle) => (
                       <span
@@ -390,7 +443,7 @@ export default function Home() {
                   </div>
 
                   {/* NAME */}
-                  <h3 className="mt-3 text-xl font-black uppercase text-white">
+                  <h3 className="mt-4 text-xl font-black uppercase leading-tight text-white">
                     {workout.name}
                   </h3>
 
@@ -400,29 +453,45 @@ export default function Home() {
                   </p>
 
                   {/* STATS */}
-                  <div className="mt-5 flex items-center justify-between border-t border-zinc-800 pt-4">
-                    <p className="text-sm font-bold text-white">
-                      {workout.duration} min
-                    </p>
+                  <div className="mt-6 grid grid-cols-3 gap-3 border-t border-zinc-800 pt-5">
+                    <div>
+                      <p className="text-[10px] font-bold tracking-wider text-zinc-500">
+                        TIME
+                      </p>
 
-                    <p className="text-sm font-bold text-white">
-                      {workout.caloriesBurned} kcal
-                    </p>
+                      <p className="mt-1 text-sm font-bold text-white">
+                        {workout.duration} min
+                      </p>
+                    </div>
 
-                    <p className="text-sm font-bold text-[#ccff00]">
-                      ★ {workout.rating}
-                    </p>
+                    <div>
+                      <p className="text-[10px] font-bold tracking-wider text-zinc-500">
+                        CALORIES
+                      </p>
+
+                      <p className="mt-1 text-sm font-bold text-white">
+                        {workout.caloriesBurned} kcal
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-bold tracking-wider text-zinc-500">
+                        RATING
+                      </p>
+
+                      <p className="mt-1 text-sm font-bold text-[#ccff00]">
+                        ★ {workout.rating}
+                      </p>
+                    </div>
                   </div>
-
                 </div>
               </Link>
             ))}
-
           </div>
         </div>
       </section>
+
       <Footer />
-            
-    </main>
+    </div>
   );
 }

@@ -5,6 +5,7 @@ export default function Footer() {
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 sm:justify-start">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.png"
             alt="FitLog Logo"

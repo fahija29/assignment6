@@ -1,9 +1,9 @@
 "use client";
 
-import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   getPlan,
   getSaved,
@@ -28,62 +28,78 @@ type Workout = {
 };
 
 export default function MyPlan() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Start empty to prevent hydration error
   const [plan, setPlan] = useState<Workout[]>([]);
   const [saved, setSaved] = useState<Workout[]>([]);
-  const [activeTab, setActiveTab] = useState<"plan" | "saved">("plan");
+
+  // Get active tab directly from URL
+  const activeTab =
+    searchParams.get("tab") === "saved" ? "saved" : "plan";
+
   const [message, setMessage] = useState("");
 
-  function loadData() {
-    setPlan(getPlan());
-    setSaved(getSaved());
-  }
+  const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Load data from localStorage after browser loads
   useEffect(() => {
-    loadData();
-
     function handleUpdate() {
-      loadData();
+      setPlan(getPlan());
+      setSaved(getSaved());
     }
+
+    handleUpdate();
 
     window.addEventListener("fitlog-update", handleUpdate);
 
     return () => {
       window.removeEventListener("fitlog-update", handleUpdate);
+
+      if (messageTimer.current) {
+        clearTimeout(messageTimer.current);
+      }
     };
   }, []);
 
-  function handleDone(id: number) {
-    removeFromPlan(id);
-    loadData();
+  const showMessage = useCallback((text: string) => {
+    setMessage(text);
 
-    setMessage("✓ Workout marked as done!");
+    if (messageTimer.current) {
+      clearTimeout(messageTimer.current);
+    }
 
-    setTimeout(() => {
+    messageTimer.current = setTimeout(() => {
       setMessage("");
     }, 2500);
-  }
+  }, []);
 
-  function handleRemovePlan(id: number) {
+  const refreshData = () => {
+    setPlan(getPlan());
+    setSaved(getSaved());
+
+    // Update Navbar counts
+    window.dispatchEvent(new Event("fitlog-update"));
+  };
+
+  const handleDone = (id: number) => {
     removeFromPlan(id);
-    loadData();
+    refreshData();
+    showMessage("✓ Workout marked as done!");
+  };
 
-    setMessage("Workout removed from today's plan.");
+  const handleRemovePlan = (id: number) => {
+    removeFromPlan(id);
+    refreshData();
+    showMessage("Workout removed from today's plan.");
+  };
 
-    setTimeout(() => {
-      setMessage("");
-    }, 2500);
-  }
-
-  function handleRemoveSaved(id: number) {
+  const handleRemoveSaved = (id: number) => {
     removeSaved(id);
-    loadData();
-
-    setMessage("Workout removed from saved.");
-
-    setTimeout(() => {
-      setMessage("");
-    }, 2500);
-  }
+    refreshData();
+    showMessage("Workout removed from saved.");
+  };
 
   const totalMinutes = plan.reduce(
     (total, workout) => total + workout.duration,
@@ -98,15 +114,10 @@ export default function MyPlan() {
   const currentWorkouts = activeTab === "plan" ? plan : saved;
 
   return (
-    <main className="min-h-screen bg-black text-white">
-
-      {/* SAME NAVBAR AS HOME */}
-      <Navbar />
-
+    <div className="min-h-screen bg-black text-white">
       {/* HEADER */}
       <section className="px-6 pb-8 pt-12 md:pt-16">
         <div className="mx-auto max-w-7xl">
-
           <p className="text-sm font-black tracking-[0.3em] text-[#ccff00]">
             FITLOG
           </p>
@@ -118,15 +129,12 @@ export default function MyPlan() {
           <p className="mt-5 max-w-xl text-zinc-400">
             Cap of five lifts for today. Finish them, then load more.
           </p>
-
         </div>
       </section>
 
       {/* METRICS */}
       <section className="px-6">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 sm:grid-cols-3">
-
-          {/* Exercises */}
           <div className="rounded-2xl border border-zinc-800 bg-[#111318] p-6">
             <p className="text-xs font-black tracking-widest text-zinc-500">
               EXERCISES
@@ -141,7 +149,6 @@ export default function MyPlan() {
             </p>
           </div>
 
-          {/* Minutes */}
           <div className="rounded-2xl border border-zinc-800 bg-[#111318] p-6">
             <p className="text-xs font-black tracking-widest text-zinc-500">
               MINUTES
@@ -156,7 +163,6 @@ export default function MyPlan() {
             </p>
           </div>
 
-          {/* Calories */}
           <div className="rounded-2xl border border-zinc-800 bg-[#111318] p-6">
             <p className="text-xs font-black tracking-widest text-zinc-500">
               CALORIES
@@ -170,31 +176,28 @@ export default function MyPlan() {
               estimated total
             </p>
           </div>
-
         </div>
       </section>
 
       {/* TABS */}
       <section className="px-6 pt-10">
         <div className="mx-auto max-w-7xl">
-
           <div className="flex gap-3 border-b border-zinc-800">
-
             <button
               type="button"
-              onClick={() => setActiveTab("plan")}
+              onClick={() => router.push("/my-plan?tab=plan")}
               className={`border-b-2 px-4 py-4 text-sm font-black uppercase transition ${
                 activeTab === "plan"
                   ? "border-[#ccff00] text-[#ccff00]"
                   : "border-transparent text-zinc-500 hover:text-white"
               }`}
             >
-              Today's Plan ({plan.length})
+              Today&apos;s Plan ({plan.length})
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab("saved")}
+              onClick={() => router.push("/my-plan?tab=saved")}
               className={`border-b-2 px-4 py-4 text-sm font-black uppercase transition ${
                 activeTab === "saved"
                   ? "border-[#ccff00] text-[#ccff00]"
@@ -203,9 +206,7 @@ export default function MyPlan() {
             >
               Saved ({saved.length})
             </button>
-
           </div>
-
         </div>
       </section>
 
@@ -221,12 +222,8 @@ export default function MyPlan() {
       {/* WORKOUT LIST */}
       <section className="px-6 py-10">
         <div className="mx-auto max-w-7xl">
-
           {currentWorkouts.length === 0 ? (
-
-            /* EMPTY STATE */
             <div className="rounded-3xl border border-dashed border-zinc-800 bg-[#111318] px-6 py-20 text-center">
-
               <p className="text-sm font-black tracking-[0.3em] text-[#ccff00]">
                 NOTHING HERE YET
               </p>
@@ -245,25 +242,18 @@ export default function MyPlan() {
               >
                 GO TO WORKOUTS
               </Link>
-
             </div>
-
           ) : (
-
-            /* WORKOUT CARDS */
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-
               {currentWorkouts.map((workout) => (
-
                 <div
                   key={workout.id}
                   className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#111318]"
                 >
-
                   <div className="flex flex-col sm:flex-row">
-
                     {/* IMAGE */}
                     <div className="h-56 sm:h-auto sm:w-52">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={workout.image}
                         alt={workout.name}
@@ -273,8 +263,6 @@ export default function MyPlan() {
 
                     {/* CONTENT */}
                     <div className="flex flex-1 flex-col p-5">
-
-                      {/* MUSCLE TAGS */}
                       <div className="flex flex-wrap gap-2">
                         {workout.muscleGroups.map((muscle) => (
                           <span
@@ -286,37 +274,26 @@ export default function MyPlan() {
                         ))}
                       </div>
 
-                      {/* NAME */}
                       <h2 className="mt-3 text-xl font-black uppercase">
                         {workout.name}
                       </h2>
 
-                      {/* EQUIPMENT */}
                       <p className="mt-2 text-sm text-zinc-500">
                         {workout.equipment}
                       </p>
 
-                      {/* STATS */}
                       <div className="mt-4 flex flex-wrap gap-4 text-xs font-bold text-zinc-300">
+                        <span>{workout.duration} min</span>
 
-                        <span>
-                          {workout.duration} min
-                        </span>
-
-                        <span>
-                          {workout.caloriesBurned} kcal
-                        </span>
+                        <span>{workout.caloriesBurned} kcal</span>
 
                         <span className="text-[#ccff00]">
                           ★ {workout.rating}
                         </span>
-
                       </div>
 
                       {/* BUTTONS */}
                       <div className="mt-5 flex flex-wrap gap-2">
-
-                        {/* VIEW DETAILS */}
                         <Link
                           href={`/workouts/${workout.id}`}
                           className="rounded-full bg-white px-4 py-2 text-xs font-black uppercase text-black transition hover:bg-[#ccff00]"
@@ -326,7 +303,6 @@ export default function MyPlan() {
 
                         {activeTab === "plan" ? (
                           <>
-                            {/* MARK AS DONE */}
                             <button
                               type="button"
                               onClick={() => handleDone(workout.id)}
@@ -335,7 +311,6 @@ export default function MyPlan() {
                               ✓ MARK AS DONE
                             </button>
 
-                            {/* REMOVE */}
                             <button
                               type="button"
                               onClick={() =>
@@ -347,8 +322,6 @@ export default function MyPlan() {
                             </button>
                           </>
                         ) : (
-
-                          /* SAVED REMOVE */
                           <button
                             type="button"
                             onClick={() =>
@@ -358,29 +331,19 @@ export default function MyPlan() {
                           >
                             ✕ REMOVE
                           </button>
-
                         )}
-
                       </div>
-
                     </div>
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           )}
-
         </div>
       </section>
 
-      {/* SAME FOOTER AS HOME */}
+      {/* FOOTER */}
       <Footer />
-
-    </main>
+    </div>
   );
 }

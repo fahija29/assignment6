@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { use, useState } from "react";
-import {
-  addToPlan,
-  saveWorkout,
-} from "../../../lib/workoutStorage";
+import { addToPlan, saveWorkout } from "../../../lib/workoutStorage";
 
 type Workout = {
   id: number;
@@ -304,7 +301,7 @@ export default function WorkoutDetails({
 
   if (!workout) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-black px-6 text-white">
+      <div className="flex min-h-screen items-center justify-center bg-black px-6 text-white">
         <div className="text-center">
           <p className="text-sm font-black tracking-[0.3em] text-[#ccff00]">
             404
@@ -325,12 +322,14 @@ export default function WorkoutDetails({
             BACK TO WORKOUTS
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
+  const currentWorkout: Workout = workout;
+
   function handleAdd() {
-    const added = addToPlan(workout);
+    const added = addToPlan(currentWorkout);
 
     if (added) {
       setMessage("Added to today's plan ✓");
@@ -340,7 +339,7 @@ export default function WorkoutDetails({
   }
 
   function handleSave() {
-    const saved = saveWorkout(workout);
+    const saved = saveWorkout(currentWorkout);
 
     if (saved) {
       setMessage("Saved for later ✓");
@@ -350,38 +349,26 @@ export default function WorkoutDetails({
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <nav className="border-b border-zinc-900 bg-black">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <Link
-            href="/"
-            className="text-xl font-black tracking-wider text-[#ccff00]"
-          >
-            FITLOG
-          </Link>
-
-          <Link
-            href="/"
-            className="text-sm font-bold text-zinc-400 transition hover:text-[#ccff00]"
-          >
-            ← BACK TO LIBRARY
-          </Link>
-        </div>
-      </nav>
-
+    <div className="min-h-screen bg-black text-white">
       <section className="px-6 py-12 md:py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2">
+
+          {/* Workout Image */}
           <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={workout.image}
-              alt={workout.name}
+              src={currentWorkout.image}
+              alt={currentWorkout.name}
               className="h-full min-h-[500px] w-full object-cover"
             />
           </div>
 
+          {/* Workout Information */}
           <div className="flex flex-col justify-center">
+
+            {/* Muscle Groups */}
             <div className="flex flex-wrap gap-2">
-              {workout.muscleGroups.map((muscle) => (
+              {currentWorkout.muscleGroups.map((muscle) => (
                 <span
                   key={muscle}
                   className="rounded-full bg-[#ccff00] px-3 py-1 text-xs font-black uppercase tracking-wider text-black"
@@ -391,38 +378,54 @@ export default function WorkoutDetails({
               ))}
             </div>
 
+            {/* Title */}
             <h1 className="mt-5 text-4xl font-black uppercase leading-none md:text-6xl">
-              {workout.name}
+              {currentWorkout.name}
             </h1>
 
+            {/* Description */}
             <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-400">
-              {workout.description}
+              {currentWorkout.description}
             </p>
 
+            {/* Workout Stats */}
             <div className="mt-8 overflow-hidden rounded-2xl border border-zinc-800 bg-[#111318]">
               <div className="grid grid-cols-2">
+
                 <div className="border-b border-r border-zinc-800 p-5">
                   <p className="text-xs font-bold text-zinc-500">
                     EQUIPMENT
                   </p>
-                  <p className="mt-2 font-bold">{workout.equipment}</p>
+                  <p className="mt-2 font-bold">
+                    {currentWorkout.equipment}
+                  </p>
                 </div>
 
                 <div className="border-b border-zinc-800 p-5">
                   <p className="text-xs font-bold text-zinc-500">
                     DIFFICULTY
                   </p>
-                  <p className="mt-2 font-bold">{workout.difficulty}</p>
+                  <p className="mt-2 font-bold">
+                    {currentWorkout.difficulty}
+                  </p>
                 </div>
 
                 <div className="border-b border-r border-zinc-800 p-5">
-                  <p className="text-xs font-bold text-zinc-500">SETS</p>
-                  <p className="mt-2 font-bold">{workout.sets}</p>
+                  <p className="text-xs font-bold text-zinc-500">
+                    SETS
+                  </p>
+                  <p className="mt-2 font-bold">
+                    {currentWorkout.sets}
+                  </p>
                 </div>
 
                 <div className="border-b border-zinc-800 p-5">
-                  <p className="text-xs font-bold text-zinc-500">REPS</p>
-                  <p className="mt-2 font-bold">{workout.reps}</p>
+                  <p className="text-xs font-bold text-zinc-500">
+                    REPS
+                  </p>
+                  <p className="mt-2 font-bold">
+                    {currentWorkout.reps}
+                  </p>
                 </div>
 
                 <div className="border-r border-zinc-800 p-5">
@@ -430,7 +433,7 @@ export default function WorkoutDetails({
                     DURATION
                   </p>
                   <p className="mt-2 font-bold">
-                    {workout.duration} min
+                    {currentWorkout.duration} min
                   </p>
                 </div>
 
@@ -439,7 +442,7 @@ export default function WorkoutDetails({
                     CALORIES
                   </p>
                   <p className="mt-2 font-bold">
-                    {workout.caloriesBurned} kcal
+                    {currentWorkout.caloriesBurned} kcal
                   </p>
                 </div>
 
@@ -448,40 +451,45 @@ export default function WorkoutDetails({
                     RATING
                   </p>
                   <p className="mt-2 font-bold text-[#ccff00]">
-                    ★ {workout.rating}
+                    ★ {currentWorkout.rating}
                   </p>
                 </div>
+
               </div>
             </div>
 
+            {/* Instructions */}
             <div className="mt-8">
               <p className="text-sm font-black tracking-[0.25em] text-[#ccff00]">
                 INSTRUCTIONS
               </p>
 
               <ol className="mt-5 space-y-4">
-                {workout.instructions.map((instruction, index) => (
-                  <li
-                    key={instruction}
-                    className="flex gap-4 text-sm leading-6 text-zinc-300"
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ccff00] text-xs font-black text-black">
-                      {index + 1}
-                    </span>
+                {currentWorkout.instructions.map(
+                  (instruction, index) => (
+                    <li
+                      key={instruction}
+                      className="flex gap-4 text-sm leading-6 text-zinc-300"
+                    >
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ccff00] text-xs font-black text-black">
+                        {index + 1}
+                      </span>
 
-                    <span>{instruction}</span>
-                  </li>
-                ))}
+                      <span>{instruction}</span>
+                    </li>
+                  )
+                )}
               </ol>
             </div>
 
+            {/* Buttons */}
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={handleAdd}
                 className="flex-1 rounded-full bg-[#ccff00] px-6 py-4 font-black uppercase text-black transition hover:scale-[1.02]"
               >
-                + Add to today's plan
+                + Add to todays plan
               </button>
 
               <button
@@ -493,6 +501,7 @@ export default function WorkoutDetails({
               </button>
             </div>
 
+            {/* Message */}
             {message && (
               <p className="mt-4 text-center text-sm font-bold text-[#ccff00]">
                 {message}
@@ -501,6 +510,6 @@ export default function WorkoutDetails({
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
